@@ -7,6 +7,27 @@ DEST_LANGUAGE="en"
 DEST=/tmp/Cubie
 DISPLAY=3  # "0:none; 1:lcd; 2:tv; 3:hdmi; 4:vga"
 # --- End -----------------------------------------------------------------------
+# --- Options --------------------------------------------------------------------
+while getopts d: flag; do
+        case $flag in
+                d)      DISPNAME=$OPTARG
+                        case $OPTARG in
+                                none)   DISPLAY=0;;
+                                lcd)    DISPLAY=1;;
+                                tv)     DISPLAY=2;;
+                                hdmi)   DISPLAY=3;;
+                                vga)    DISPLAY=4;;
+                                *)      echo "Use one of none | lcd | tv | hdmi | vga"
+                                        exit 0;;
+                        esac
+                        ;;
+                ?)
+                        #echo "Unkown option given"
+                        exit 1;;
+        esac
+done
+shift $((OPTIND-1))
+# --- Options End ----------------------------------------------------------------
 SRC=$(pwd)
 set -e
 
@@ -61,8 +82,8 @@ patch -f $DEST/u-boot-sunxi/include/configs/sunxi-common.h < patch/memory.patch 
 # Applying Patch for gpio
 patch -f $DEST/linux-sunxi/drivers/gpio/gpio-sunxi.c < patch/gpio.patch || true
 
-#Change Video output ( TODO add a param so the user can choose that ?)
-sed -e 's/screen0_output_type.*/screen0_output_type     = '$DISPLAY'/g' $DEST/cubie_configs/sysconfig/linux/cubietruck.fex > $DEST/cubie_configs/sysconfig/linux/cubietruck-vga.fex
+# Change Video output 
+sed -e 's/screen0_output_type.*/screen0_output_type     = '$DISPLAY'/g' $DEST/cubie_configs/sysconfig/linux/cubietruck.fex > $DEST/cubie_configs/sysconfig/linux/cubietruck-${DISPNAME}.fex
 
 # Copying Kernel config
 cp $SRC/config/kernel.config $DEST/linux-sunxi/
