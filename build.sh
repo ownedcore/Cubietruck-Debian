@@ -6,6 +6,7 @@ DEST_LANG="en_US"
 DEST_LANGUAGE="en"
 DEST=/tmp/Cubie
 DISPLAY=3  # "0:none; 1:lcd; 2:tv; 3:hdmi; 4:vga"
+DISPNAME="hdmi"
 # --- End -----------------------------------------------------------------------
 # --- Options --------------------------------------------------------------------
 while getopts d: flag; do
@@ -102,7 +103,7 @@ cd $DEST/sunxi-tools
 make clean && make fex2bin
 cp fex2bin /usr/bin/
 # hardware configuration
-fex2bin $DEST/cubie_configs/sysconfig/linux/cubietruck-vga.fex $DEST/output/script.bin
+fex2bin $DEST/cubie_configs/sysconfig/linux/cubietruck-${DISPNAME}.fex $DEST/output/script.bin
 fex2bin $DEST/cubie_configs/sysconfig/linux/cubietruck.fex $DEST/output/script-hdmi.bin
 
 # kernel image
