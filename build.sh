@@ -36,7 +36,7 @@ if [ "$OS" == "debian" ]; then
 	cp ./config/emdebian.list /etc/apt/sources.list.d/
 	apt-get update -o Dir::ETC::sourcelist="sources.list.d/emdebian.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
 	# install now due to parted conflicting with normal repo
-	apt-get install $PKG_GCC
+	apt-get -qq -y install $PKG_GCC
 	rm /etc/apt/sources.list.d/emdebian.list
 	apt-get update
 else
