@@ -6,6 +6,8 @@ DEST_LANG="en_US"
 DEST_LANGUAGE="en"
 DEST=/tmp/Cubie
 DISPLAY=3  # "0:none; 1:lcd; 2:tv; 3:hdmi; 4:vga"
+envAPT="DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true"
+envLC="LC_ALL=C LANG=C LANGUAGE=C"
 # --- End -----------------------------------------------------------------------
 SRC=$(pwd)
 set -e
@@ -21,7 +23,7 @@ sleep 3
 # Downloading necessary files
 #--------------------------------------------------------------------------------
 echo "------ Downloading necessary files"
-apt-get -qq -y install binfmt-support bison build-essential ccache debootstrap flex gawk gcc-arm-linux-gnueabi gcc-arm-linux-gnueabihf gettext git linux-headers-generic linux-image-generic lvm2 qemu-user-static texinfo texlive u-boot-tools uuid-dev zlib1g-dev unzip libncurses5-dev pkg-config libusb-1.0-0-dev
+apt-get -qq -y install binfmt-support bison build-essential ccache multistrap flex gawk gcc-arm-linux-gnueabi gcc-arm-linux-gnueabihf gettext git linux-headers-generic linux-image-generic lvm2 qemu-user-static texinfo texlive u-boot-tools uuid-dev zlib1g-dev unzip libncurses5-dev pkg-config libusb-1.0-0-dev
 
 #--------------------------------------------------------------------------------
 # Preparing output / destination files
@@ -128,17 +130,19 @@ mount /dev/loop1 $DEST/output/sdcard/
 
 echo "------ Install basic filesystem"
 # install base system
-debootstrap --no-check-gpg --arch=armhf --foreign wheezy $DEST/output/sdcard/
-# mount proc, sys and dev
+multistrap -f $SRC/config/emdebian-multistrap.conf
+# we need this
+cp /usr/bin/qemu-arm-static $DEST/output/sdcard/usr/bin/
+# second stage
 mount -t proc chproc $DEST/output/sdcard/proc
+chroot $DEST/output/sdcard /bin/bash -c "/var/lib/dpkg/info/dash.preinst install"
+chroot $DEST/output/sdcard /bin/bash -c "dpkg --configure -a"
+# mounts vanish after here. remount. now all
+# mount proc, sys and dev
 mount -t sysfs chsys $DEST/output/sdcard/sys
 # This works on half the systems I tried.  Else use bind option
 mount -t devtmpfs chdev $DEST/output/sdcard/dev || mount --bind /dev $DEST/output/sdcard/dev
 mount -t devpts chpts $DEST/output/sdcard/dev/pts
-# we need this
-cp /usr/bin/qemu-arm-static $DEST/output/sdcard/usr/bin/
-# second stage
-chroot $DEST/output/sdcard /bin/bash -c "/debootstrap/debootstrap --second-stage"
 
 # update /etc/issue
 cat <<EOT > $DEST/output/sdcard/etc/issue
@@ -182,14 +186,12 @@ cp $SRC/scripts/cubian-firstrun $DEST/output/sdcard/etc/init.d
 chroot $DEST/output/sdcard /bin/bash -c "chmod +x /etc/init.d/cubian-*"
 # and startable on boot
 chroot $DEST/output/sdcard /bin/bash -c "update-rc.d cubian-firstrun defaults" 
-# install and configure locales
-chroot $DEST/output/sdcard /bin/bash -c "apt-get -qq -y install locales"
+# extra packages are done through multistrap at strap time
 # reconfigure locales
 echo -e $DEST_LANG'.UTF-8 UTF-8\n' > $DEST/output/sdcard/etc/locale.gen 
 chroot $DEST/output/sdcard /bin/bash -c "locale-gen"
 echo -e 'LANG="'$DEST_LANG'.UTF-8"\nLANGUAGE="'$DEST_LANG':'$DEST_LANGUAGE'"\n' > $DEST/output/sdcard/etc/default/locale
 chroot $DEST/output/sdcard /bin/bash -c "export LANG=$DEST_LANG.UTF-8"
-chroot $DEST/output/sdcard /bin/bash -c "apt-get -qq -y install openssh-server ca-certificates module-init-tools dhcp3-client udev ifupdown iproute dropbear iputils-ping ntpdate usbutils uboot-envtools pciutils wireless-tools wpasupplicant procps libnl-dev parted cpufreqd cpufrequtils console-setup unzip bridge-utils" 
 chroot $DEST/output/sdcard /bin/bash -c "apt-get -qq -y upgrade"
 
 # configure MIN / MAX Speed for cpufrequtils
