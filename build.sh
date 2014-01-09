@@ -33,6 +33,7 @@ if [ "$OS" == "debian" ]; then
 	#PKG_GCC="gcc-4.7-arm-linux-gnueabihf gcc-4.7-arm-linux-gnueabi"
 	PKG_GCC="gcc-4.7-arm-linux-gnueabihf"
 	PKG_KRN="linux-headers-${arch} linux-image-${arch}"
+	apt-get -qq -y install emdebian-archive-keyring
 	cp ./config/emdebian.list /etc/apt/sources.list.d/
 	apt-get update -o Dir::ETC::sourcelist="sources.list.d/emdebian.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
 	# install now due to parted conflicting with normal repo
@@ -289,6 +290,8 @@ rm $DEST/output/sdcard/usr/bin/qemu-arm-static
 # umount images 
 umount $DEST/output/sdcard/ 
 losetup -d /dev/loop1 
+sync
+sleep 2
 losetup -d /dev/loop0
 # compress image 
 gzip $DEST/output/*.raw
