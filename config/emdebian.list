@@ -1,4 +1,2 @@
 # Get our toolchain from
 deb http://www.emdebian.org/debian unstable main
-# Used for multistrap
-#deb http://www.emdebian.org/grip wheezy-grip main
