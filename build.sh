@@ -37,6 +37,8 @@ if [ "$OS" == "debian" ]; then
 	apt-get update -o Dir::ETC::sourcelist="sources.list.d/emdebian.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
 	# install now due to parted conflicting with normal repo
 	apt-get -qq -y install $PKG_GCC
+	# Symlink to numberless binary is not yet handled by packet
+	ln -sf $(which arm-linux-gnueabihf-gcc-4.7) /usr/local/bin/arm-linux-gnueabihf-gcc
 	rm /etc/apt/sources.list.d/emdebian.list
 	apt-get update
 else
@@ -45,9 +47,6 @@ else
 fi
 apt-get -qq -y install binfmt-support bison build-essential ccache debootstrap flex gawk $PKG_GCC gettext git $PKG_KRN lvm2 qemu-user-static texinfo texlive u-boot-tools uuid-dev zlib1g-dev unzip libncurses5-dev pkg-config libusb-1.0-0-dev parted
 
-if [ "$OS" == "debian" ]; then
-	ln -sf $(which arm-linux-gnueabihf-gcc-4.7) /usr/local/bin/arm-linux-gnueabihf-gcc
-fi
 #--------------------------------------------------------------------------------
 # Preparing output / destination files
 #--------------------------------------------------------------------------------
