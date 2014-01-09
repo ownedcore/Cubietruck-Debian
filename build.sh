@@ -6,8 +6,6 @@ DEST_LANG="en_US"
 DEST_LANGUAGE="en"
 DEST=/tmp/Cubie
 DISPLAY=3  # "0:none; 1:lcd; 2:tv; 3:hdmi; 4:vga"
-envAPT="DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true"
-envLC="LC_ALL=C LANG=C LANGUAGE=C"
 # --- End -----------------------------------------------------------------------
 SRC=$(pwd)
 set -e
