@@ -7,6 +7,13 @@ DEST_LANGUAGE="en"
 DEST=/tmp/Cubie
 DISPLAY=3  # "0:none; 1:lcd; 2:tv; 3:hdmi; 4:vga"
 # --- End -----------------------------------------------------------------------
+grep -i "ubuntu" /proc/version
+if [ $? -ne 0 ]; then
+	OS="debian"
+fi
+if [ $(arch) == "x86_64" ]; then
+	arch="amd64"
+fi
 SRC=$(pwd)
 set -e
 
@@ -21,8 +28,26 @@ sleep 3
 # Downloading necessary files
 #--------------------------------------------------------------------------------
 echo "------ Downloading necessary files"
-apt-get -qq -y install binfmt-support bison build-essential ccache debootstrap flex gawk gcc-arm-linux-gnueabi gcc-arm-linux-gnueabihf gettext git linux-headers-generic linux-image-generic lvm2 qemu-user-static texinfo texlive u-boot-tools uuid-dev zlib1g-dev unzip libncurses5-dev pkg-config libusb-1.0-0-dev
+if [ "$OS" == "debian" ]; then
+	# gnueabi needs libc6 package. not good
+	#PKG_GCC="gcc-4.7-arm-linux-gnueabihf gcc-4.7-arm-linux-gnueabi"
+	PKG_GCC="gcc-4.7-arm-linux-gnueabihf"
+	PKG_KRN="linux-headers-${arch} linux-image-${arch}"
+	cp ./config/emdebian.list /etc/apt/sources.list.d/
+	apt-get update -o Dir::ETC::sourcelist="sources.list.d/emdebian.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
+	# install now due to parted conflicting with normal repo
+	apt-get install $PKG_GCC
+	rm /etc/apt/sources.list.d/emdebian.list
+	apt-get update
+else
+	PKG_GCC="gcc-arm-linux-gnueabi gcc-arm-linux-gnueabihf"
+	PKG_KRN="linux-headers-generic linux-image-generic"
+fi
+apt-get -qq -y install binfmt-support bison build-essential ccache debootstrap flex gawk $PKG_GCC gettext git $PKG_KRN lvm2 qemu-user-static texinfo texlive u-boot-tools uuid-dev zlib1g-dev unzip libncurses5-dev pkg-config libusb-1.0-0-dev parted
 
+if [ "$OS" == "debian" ]; then
+	ln -sf $(which arm-linux-gnueabihf-gcc-4.7) /usr/local/bin/arm-linux-gnueabihf-gcc
+fi
 #--------------------------------------------------------------------------------
 # Preparing output / destination files
 #--------------------------------------------------------------------------------
